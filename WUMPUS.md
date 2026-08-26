@@ -1,4 +1,4 @@
-Create a simple implementation of the classic textual game [Hunt the Wumpus](https://en.wikipedia.org/wiki/Hunt_the_Wumpus).
+An implementation of the classic textual game [Hunt the Wumpus](https://en.wikipedia.org/wiki/Hunt_the_Wumpus).
 
 The rules are:
 
