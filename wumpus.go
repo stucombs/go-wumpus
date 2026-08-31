@@ -139,7 +139,7 @@ func (p *player) isDead() bool {
 func (p *player) isDanger() {
 // Determine if the player entered a room with a bat
 	if p.pos == bat1 || p.pos == bat2 {
-		fmt.Println("\nYou enter a cavern and large bat picks you up and throws you into a new cavern!")
+		fmt.Println("\nYou enter a cavern, large bat picks you up and throws you into a new cavern!")
 		p.randomRoom()
 	}
 }
@@ -160,6 +160,7 @@ func (p *player) randomRoom() {
 func (p *player) wakeWumpus() {
 	wake := rand.Intn(4)
 	if wake > 0 {
+		fmt.Println(chalk.Italic.TextStyle("\nYou hear a large roar..."))
 		wumpus = cave[wumpus][rand.Intn(3)]
 		if wumpus == p.pos {
 			p.exitMessage = "The Wumpus is startled and moves into your cave. You are eaten alive!"
@@ -215,7 +216,7 @@ func main() {
 	pit2 = rand.Intn(19) + 2
 
 	// begin game
-	fmt.Println("You enter a cave. Hunt the Wumpus...")
+	fmt.Println(chalk.Bold.TextStyle(chalk.Blue.Color("You enter a large cave. Hunt the Wumpus...")))
 	for p.alive {
 		if p.isDead() {
 			continue
@@ -233,8 +234,8 @@ func main() {
 			clearScreen()
 		case "shoot":
 			p.isShooting = true
-			p.shoot()
 			clearScreen()
+			p.shoot()
 
 		case "quit":
 			clearScreen()
