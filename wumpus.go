@@ -28,58 +28,124 @@ type player struct {
 	pos int
 	alive bool
 	arrows int
+	isShooting bool
+	isMoving bool
 	winner bool
 	exitMessage string
 }
 
-func (p player ) status() {
+func (p player) status() {
 	fmt.Printf("\nYou stand in cavern %v.\n", chalk.Bold.TextStyle(strconv.Itoa(p.pos)))
 	fmt.Printf("You have %v arrow(s) left.\n\n", chalk.Bold.TextStyle(strconv.Itoa(p.arrows)))
 }
 
-func (p player) move() string {
-	moves := cave[p.pos];
-	moveMenu := gocliselect.NewMenu("Move to?")
-	for _, move := range moves {
-		value := strconv.Itoa(move)
-		moveMenu.AddItem(value, value)
+func (p *player) move() {
+	for p.isMoving {
+		moves := cave[p.pos];
+		moveMenu := gocliselect.NewMenu("Move to?")
+		for _, move := range moves {
+			value := strconv.Itoa(move)
+			moveMenu.AddItem(value, value)
+		}
+
+		moveMenu.AddItem("Back", "b")
+
+		choice := moveMenu.Display()
+
+		if choice == "b" {
+			p.isMoving = false
+		} else {
+			p.pos, _ = strconv.Atoi(choice)
+			p.isMoving = false
+		}	
 	}
-
-	moveMenu.AddItem("Back", "b")
-
-	choice := moveMenu.Display()
-
-	return choice
 }
 
-func (p player) shoot() string {
-	moves := cave[p.pos]
-	shootMenu := gocliselect.NewMenu("Shoot where?")
-	for _, move := range moves {
-		value := strconv.Itoa(move)
-		shootMenu.AddItem(value, value)
-	}
+func (p *player) shoot() {
+	for p.isShooting {
+		moves := cave[p.pos]
+		shootMenu := gocliselect.NewMenu("Shoot where?")
+		for _, move := range moves {
+			value := strconv.Itoa(move)
+			shootMenu.AddItem(value, value)
+		}
 
-	shootMenu.AddItem("Back", "b")
-	
-	choice := shootMenu.Display()
-	return choice
+		shootMenu.AddItem("Back", "b")
+		choice := shootMenu.Display()
+
+		if choice == "b" {
+			p.isShooting = false
+		} else {
+			fmt.Printf("You shoot into cavern %v\n", choice)
+			shootInt, _ := strconv.Atoi(choice)
+			if shootInt == wumpus {
+				// Player wins
+				p.winner = true
+				p.alive = false
+				p.isShooting = false
+			} else {
+				p.arrows -= 1
+				if p.arrows == 0 {
+					fmt.Println(chalk.Italic.TextStyle("You shoot your last arrow."))
+					p.alive = false
+					p.exitMessage = "You ran out of arrows."
+					p.isShooting = false
+				}
+			}
+		}
+	}
 }
 
 func (p player) sense() {
 	for _, cavern := range cave[p.pos] {
 		if cavern == wumpus {
-			fmt.Println(chalk.Italic.TextStyle("You smell something terrible nearby."))
+			fmt.Println(chalk.Italic.TextStyle("You smell something terrible nearby...\n"))
 		}
 
 		if cavern == bat1 || cavern == bat2 {
-			fmt.Println(chalk.Italic.TextStyle("You hear a rustling."))
+			fmt.Println(chalk.Italic.TextStyle("You hear a rustling...\n"))
 		}
 
 		if cavern == pit1 || cavern == pit2 {
-			fmt.Println(chalk.Italic.TextStyle("You feel a cold wind blowing from a nearby cavern."))
+			fmt.Println(chalk.Italic.TextStyle("You feel a cold wind blowing from a nearby cavern...\n"))
 		}
 	}
+}
+
+func (p *player) isDead() bool {
+// Determine if the player hit a game ending condition
+	if p.pos == wumpus {
+		p.exitMessage = "You enter a cavern with the Wumpus. You are eaten alive!"
+		p.alive = false
+
+		return true
+	}
+
+	if p.pos == pit1 || p.pos == pit2 {
+		p.exitMessage = "You enter a cavern with a large, endless pit. You fall to your death!"
+		p.alive = false
+
+		return true
+	}
+
+	return false
+}
+
+
+func (p *player) isDanger() {
+// Determine if the player entered a room with a bat
+	if p.pos == bat1 || p.pos == bat2 {
+		fmt.Println("\nYou enter a cavern and large bat picks you up and throws you into a new cavern!")
+		p.randomRoom()
+	}
+}
+
+func (p *player) randomRoom() {
+	p.pos = rand.Intn(len(cave))
+}
+
+func wakeWumpus() {
+	// TOOD: On miss, .75 chance for wumpus to wake and move
 }
 
 func menuOptions() string {
@@ -101,11 +167,11 @@ func menuOptions() string {
 }
 
 func clearScreen() {
-	//TODO
+	//TODO: Clear screen on menu selection?
 }
 
+// TEMP DEBUG
 func showBoard() {
-	// TEMP DEBUG
 	fmt.Printf("Wumpus pos %v\n", wumpus)
 	fmt.Printf("Bat 1 pos: %v & Bat 2 pos: %v\n", bat1, bat2)
 	fmt.Printf("Pit 1 pos: %v & Pit 2 pos: %v\n", pit1, pit2)
@@ -117,7 +183,7 @@ func main() {
 		pos: 1,
 		alive: true,
 		winner: false,
-		arrows: 1,
+		arrows: 5,
 	}
 
 	wumpus = rand.Intn(len(cave)) //TODO: How to make these not be in room 1?
@@ -129,47 +195,29 @@ func main() {
 	// begin game
 	fmt.Println("You enter a cave. Hunt the Wumpus...")
 	for p.alive {
+		if p.isDead() {
+			continue
+		}
+		p.isDanger()
 		p.status()
+		p.sense()
 		// Player option select returned by menuOptions
 		choice := menuOptions()
 
 		switch choice {
 		case "move":
-			moveChoice := p.move()
-			if moveChoice == "b" {
-				// Reset to main menu
-				continue
-			}
+			p.isMoving = true
+			p.move()
 
-			fmt.Println("\nYou move to cavern ", moveChoice)
-			intMoveChoice, _ := strconv.Atoi(moveChoice)
-			p.pos = intMoveChoice
-			p.sense()
 		case "shoot":
-			shootChoice := p.shoot()
-			if shootChoice == "b" {
-				// Reset to main menu
-				continue
-			}
-
-			fmt.Printf("\nYou shoot into cavern %v\n", shootChoice)
-			intShootChoice, _ := strconv.Atoi(shootChoice)
-			if intShootChoice == wumpus {
-				p.winner = true
-				p.alive = false
-			}
-
-			p.arrows -= 1
-			if p.arrows == 0 {
-				// TODO: (optional) Add "run away" state?
-				fmt.Println(chalk.Italic.TextStyle("You shoot your last arrow."))
-				p.alive = false
-				p.exitMessage = "You ran out of arrows."
-			}
-
-			// TOOD: On miss, .75 chance for wumpus to wake and move
+			p.isShooting = true
+			p.shoot()
+			wakeWumpus()
+			
 		case "game":
+			// TEMP DEBUG
 			showBoard()
+
 		case "quit":
 			p.exitMessage = "\nYou failed to hunt the wumpus."
 			p.alive = false
@@ -177,8 +225,8 @@ func main() {
 	}
 
 	if p.winner {
-		fmt.Println(chalk.Green.Color("Wumpus hunted, you win!"))
+		fmt.Println(chalk.Green.Color("\nWumpus hunted, you win!"))
 	} else {
-		fmt.Printf(chalk.Red.Color("\nPlayer died ☠️. %v\n\n"), p.exitMessage)
+		fmt.Printf(chalk.Red.Color("\nPlayer died. %v\n\n"), p.exitMessage)
 	}
 }
