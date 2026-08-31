@@ -82,16 +82,17 @@ func (p *player) shoot() {
 				// Player wins
 				p.winner = true
 				p.alive = false
-				p.isShooting = false
 			} else {
-				p.arrows -= 1
+				p.wakeWumpus()
+				p.arrows--
 				if p.arrows == 0 {
 					fmt.Println(chalk.Italic.TextStyle("You shoot your last arrow."))
 					p.alive = false
 					p.exitMessage = "You ran out of arrows."
-					p.isShooting = false
+					
 				}
 			}
+			p.isShooting = false
 		}
 	}
 }
@@ -141,11 +142,27 @@ func (p *player) isDanger() {
 }
 
 func (p *player) randomRoom() {
-	p.pos = rand.Intn(len(cave))
+	// Place player in random, empty room
+	isOccupied := true
+	for isOccupied {
+		p.pos = rand.Intn(len(cave))
+		if p.pos == wumpus || p.pos == bat1 || p.pos == bat2 || p.pos == pit1 || p.pos == pit2 {
+			continue
+		} else {
+			isOccupied = false
+		}
+	}
 }
 
-func wakeWumpus() {
-	// TOOD: On miss, .75 chance for wumpus to wake and move
+func (p *player) wakeWumpus() {
+	wake := rand.Intn(4)
+	if wake > 0 {
+		wumpus = cave[wumpus][rand.Intn(3)]
+		if wumpus == p.pos {
+			p.exitMessage = "The Wumpus is startled and moves into your cave. You are eaten alive!"
+			p.alive = false
+		}
+	}
 }
 
 func menuOptions() string {
@@ -171,7 +188,8 @@ func clearScreen() {
 }
 
 // TEMP DEBUG
-func showBoard() {
+func showBoard(p player) {
+	fmt.Printf("Player pos: %v\n", p.pos)
 	fmt.Printf("Wumpus pos %v\n", wumpus)
 	fmt.Printf("Bat 1 pos: %v & Bat 2 pos: %v\n", bat1, bat2)
 	fmt.Printf("Pit 1 pos: %v & Pit 2 pos: %v\n", pit1, pit2)
@@ -186,11 +204,11 @@ func main() {
 		arrows: 5,
 	}
 
-	wumpus = rand.Intn(len(cave)) //TODO: How to make these not be in room 1?
-	bat1 = rand.Intn(len(cave))
-	bat2 = rand.Intn(len(cave))
-	pit1 = rand.Intn(len(cave))
-	pit2 = rand.Intn(len(cave))
+	wumpus = rand.Intn(19) + 2 // caverns 2 - 20
+	bat1 = rand.Intn(19) + 2
+	bat2 = rand.Intn(19) + 2
+	pit1 = rand.Intn(19) + 2
+	pit2 = rand.Intn(19) + 2
 
 	// begin game
 	fmt.Println("You enter a cave. Hunt the Wumpus...")
@@ -212,11 +230,10 @@ func main() {
 		case "shoot":
 			p.isShooting = true
 			p.shoot()
-			wakeWumpus()
 			
 		case "game":
 			// TEMP DEBUG
-			showBoard()
+			showBoard(p)
 
 		case "quit":
 			p.exitMessage = "\nYou failed to hunt the wumpus."

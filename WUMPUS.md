@@ -1,4 +1,6 @@
-An implementation of the classic textual game [Hunt the Wumpus](https://en.wikipedia.org/wiki/Hunt_the_Wumpus).
+An implementation of the classic textual game [Hunt the Wumpus](https://en.wikipedia.org/wiki/Hunt_the_Wumpus) in [Go](https://go.dev/).
+
+Game rules and directions provided at: [Rosetta Code - Hunt the Wumpus](https://rosettacode.org/wiki/Hunt_the_Wumpus#)
 
 The rules are:
 
@@ -8,9 +10,10 @@ The player has 5 arrows. If they run out of arrows before killing the Wumpus, th
 
 In the cave there are:
 
-One Wumpus
-Two giant bats
-Two bottomless pits
+- One (1) Wumpus
+- Two (2) giant bats
+- Two (2) bottomless pits
+
 If the player enters a room with the Wumpus, he is eaten by it and the game is lost.
 
 If the player enters a room with a bottomless pit, he falls into it and the game is lost.
@@ -21,7 +24,8 @@ Each turn the player can either walk into an adjacent room or shoot into an adja
 
 Whenever the player enters a room, he "senses" what happens in adjacent rooms. The messages are:
 
-Nearby Wumpus: "You smell something terrible nearby."
-Nearby bat: "You hear a rustling."
-Nearby pit: "You feel a cold wind blowing from a nearby cavern."
+- Nearby Wumpus: "You smell something terrible nearby."
+- Nearby bat: "You hear a rustling."
+- Nearby pit: "You feel a cold wind blowing from a nearby cavern."
+
 When the player shoots, he wins the game if he is shooting in the room with the Wumpus. If he shoots into another room, the Wumpus has a 75% of chance of waking up and moving into an adjacent room: if this is the room with the player, he eats him up and the game is lost.
