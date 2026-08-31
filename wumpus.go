@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"os"
+	"os/exec"
+	"runtime"
 	"strconv"
 
 	"github.com/nexidian/gocliselect"
@@ -142,10 +145,10 @@ func (p *player) isDanger() {
 }
 
 func (p *player) randomRoom() {
-	// Place player in random, empty room
+// Place player in random, empty room
 	isOccupied := true
 	for isOccupied {
-		p.pos = rand.Intn(len(cave))
+		p.pos = rand.Intn(19) + 1
 		if p.pos == wumpus || p.pos == bat1 || p.pos == bat2 || p.pos == pit1 || p.pos == pit2 {
 			continue
 		} else {
@@ -169,7 +172,6 @@ func menuOptions() string {
 	menuOptions := []menuItem {
 		{ text: "Move",  value: "move" },
 		{ text: "Shoot", value: "shoot" },
-		{ text: "Show Board", value: "game"},
 		{ text: "Quit",  value: "quit" },
 	}
 
@@ -184,15 +186,17 @@ func menuOptions() string {
 }
 
 func clearScreen() {
-	//TODO: Clear screen on menu selection?
-}
+	var cmd *exec.Cmd
 
-// TEMP DEBUG
-func showBoard(p player) {
-	fmt.Printf("Player pos: %v\n", p.pos)
-	fmt.Printf("Wumpus pos %v\n", wumpus)
-	fmt.Printf("Bat 1 pos: %v & Bat 2 pos: %v\n", bat1, bat2)
-	fmt.Printf("Pit 1 pos: %v & Pit 2 pos: %v\n", pit1, pit2)
+	switch runtime.GOOS {
+	case "windows":
+		cmd = exec.Command("cmd", "/c", "cls")
+	default:
+		cmd = exec.Command("clear")
+	}
+
+	cmd.Stdout = os.Stdout
+	cmd.Run()
 }
 
 func main() {
@@ -226,16 +230,14 @@ func main() {
 		case "move":
 			p.isMoving = true
 			p.move()
-
+			clearScreen()
 		case "shoot":
 			p.isShooting = true
 			p.shoot()
-			
-		case "game":
-			// TEMP DEBUG
-			showBoard(p)
+			clearScreen()
 
 		case "quit":
+			clearScreen()
 			p.exitMessage = "\nYou failed to hunt the wumpus."
 			p.alive = false
 		}
